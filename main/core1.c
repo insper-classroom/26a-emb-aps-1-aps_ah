@@ -18,12 +18,10 @@ volatile int counter = 0;
 
 void pwm_handler() {
     pwm_clear_irq(pwm_gpio_to_slice_num(AUDIO_PIN));
-
     if (tone == 0) {
         pwm_set_gpio_level(AUDIO_PIN, 0);
         return;
     }
-
     pwm_set_gpio_level(AUDIO_PIN, (counter++ % tone));
 }
 
@@ -37,6 +35,20 @@ void set_tone(int id){
     }
 }
 
+void set_tone_duplo(int id1, int id2){
+    counter = 0;
+    int par = id1 * 4 + id2;
+    switch(par){
+        case 0*4+1: tone = 30;  break;
+        case 0*4+2: tone = 40;  break;
+        case 0*4+3: tone = 45;  break;
+        case 1*4+2: tone = 60;  break;
+        case 1*4+3: tone = 70;  break;
+        case 2*4+3: tone = 80;  break;
+        default:    tone = 35;  break;
+    }
+}
+
 void error_sound(){
     for(int i=0;i<3;i++){
         tone = 25;
@@ -47,13 +59,11 @@ void error_sound(){
 }
 
 void core1_entry(){
-    // LEDs
     for(int i=0;i<4;i++){
         gpio_init(leds[i]);
         gpio_set_dir(leds[i], GPIO_OUT);
     }
 
-    // Buzzer PWM
     gpio_set_function(AUDIO_PIN, GPIO_FUNC_PWM);
     int slice = pwm_gpio_to_slice_num(AUDIO_PIN);
 
@@ -69,13 +79,20 @@ void core1_entry(){
     while(1){
         if(multicore_fifo_rvalid()){
             uint32_t cmd = multicore_fifo_pop_blocking();
-
             uint8_t tipo = cmd >> 24;
             uint8_t dado = cmd & 0xFF;
 
             if(tipo == CMD_PLAY){
                 set_tone(dado);
                 sleep_ms(300);
+                tone = 0;
+            }
+
+            if(tipo == CMD_PLAY_DUPLO){
+                uint8_t id1 = (dado >> 4) & 0xF;
+                uint8_t id2 = dado & 0xF;
+                set_tone_duplo(id1, id2);
+                sleep_ms(400);
                 tone = 0;
             }
 
