@@ -105,7 +105,15 @@ void core1_entry(){
             }
 
             if(tipo == CMD_ERROR){
+                gpio_put(leds[0], 1);
+                gpio_put(leds[1], 1);
+                gpio_put(leds[2], 1);
+                gpio_put(leds[3], 1);
                 error_sound();
+                gpio_put(leds[0], 0);
+                gpio_put(leds[1], 0);
+                gpio_put(leds[2], 0);
+                gpio_put(leds[3], 0);
             }
         }
     }
