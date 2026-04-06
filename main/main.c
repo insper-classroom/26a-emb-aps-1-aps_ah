@@ -77,8 +77,14 @@ int play(){
     return 1;
 }
 
-int main(){
+void aguardar_inicio(){
+    printf("Aproxime a mao para iniciar...\n");
+    multicore_fifo_push_blocking((CMD_AGUARDAR_MAO<<24));
+    while(multicore_fifo_pop_blocking() != CMD_START_GAME);
+    printf("Jogo iniciado!\n");
+}
 
+int main(){
     stdio_init_all();
     init_btns();
 
@@ -87,6 +93,8 @@ int main(){
     multicore_launch_core1(core1_entry);
 
     seq[0] = rand()%4;
+
+    aguardar_inicio();
 
     while(1){
         printf("Rodada: %d\n", tamanho);
@@ -100,6 +108,7 @@ int main(){
             tamanho = 1;
             seq[0] = rand()%4;
             sleep_ms(2000);
+            aguardar_inicio();
             continue;
         }
 
@@ -108,6 +117,7 @@ int main(){
             tamanho = 1;
             seq[0] = rand()%4;
             sleep_ms(2000);
+            aguardar_inicio();
             continue;
         }
 
